@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import pymysql
+
 pymysql.install_as_MySQLdb()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -26,8 +27,6 @@ SECRET_KEY = "django-insecure-&8#qyvlq9@cxo%e225qdtvxwaa91p@253#uihl8^ah7y^js245
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
-ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -78,10 +77,13 @@ WSGI_APPLICATION = "myproject.wsgi.application"
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Example for React frontend
     "http://127.0.0.1:3001",
-     "http://15.207.99.18:8000",  # Local development
+    # Local development
     # Add other domains as needed
 ]
 CORS_ALLOW_ALL_ORIGINS = True
+
+
+ALLOWED_HOSTS = ["15.207.99.18", "localhost", "127.0.0.1"]
 
 
 # Database
