@@ -77,13 +77,14 @@ WSGI_APPLICATION = "myproject.wsgi.application"
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Example for React frontend
     "http://127.0.0.1:3001",
+    "http://13.201.229.245"
     # Local development
     # Add other domains as needed
 ]
 CORS_ALLOW_ALL_ORIGINS = True
 
 
-ALLOWED_HOSTS = ["15.207.99.18", "localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["15.207.99.18", "localhost", "127.0.0.1", "13.201.229.245"]
 
 
 # Database
