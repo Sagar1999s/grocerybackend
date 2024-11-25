@@ -15,4 +15,7 @@ urlpatterns = [
     path("get-orders/", views.get_orders, name="get_orders"),
     path('delete-product/<int:product_id>/', views.delete_product, name='delete-product'),
     path('edit-product/<int:product_id>/', views.edit_product, name='edit_product'),
+    # 
+    path('send-otp/', views.send_otp, name='send_otp'),
+    path('verify-otp/', views.verify_otp, name='verify_otp'),
 ]

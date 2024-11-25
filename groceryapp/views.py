@@ -219,15 +219,21 @@ def login_user(request):
         # Extract email and password from request data
         email = request.data.get("email")
         password = request.data.get("password")
+        otp = request.data.get("otp", "")
 
         if not email or not password:
             return Response(
                 {"error": "Both email and password are required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        if password or not otp:
+            user = authenticate(request, username=email, password=password)
+        if otp or not password:
+            user = authenticate(request, username=email, password=None)
+
+
 
         # Authenticate user
-        user = authenticate(request, username=email, password=password)
         if not user:
             return Response(
                 {"error": "Invalid email or password."},
@@ -483,3 +489,99 @@ def edit_product(request, product_id):
             return JsonResponse({"message": "Invalid JSON format"}, status=400)
 
     return JsonResponse({"message": "Invalid request method"}, status=400)
+
+
+from django.core.mail import send_mail
+from django.http import JsonResponse
+from .models import OTP
+import random
+
+
+@api_view(["POST"])
+def send_otp(request):
+    if request.method == "POST":
+        email = request.data.get("email")
+
+        # Generate a 6-digit OTP
+        otp = str(random.randint(100000, 999999))
+
+        # Save OTP to the database
+        OTP.objects.create(email=email, otp=otp)
+
+        # Send OTP via email
+        send_mail(
+            "Your OTP for Login",
+            f"Your OTP is {otp}. It will expire in 5 minutes.",
+            "your_email@example.com",
+            [email],
+            fail_silently=False,
+        )
+
+        return JsonResponse({"message": "OTP sent successfully!"}, status=200)
+
+    return JsonResponse({"error": "Invalid request!"}, status=400)
+
+
+
+
+
+from django.contrib.auth import login
+from django.contrib.auth.models import User
+from django.http import JsonResponse
+from django.middleware.csrf import get_token
+from rest_framework.decorators import api_view
+from .models import OTP
+
+@api_view(["POST"])
+def verify_otp(request):
+    if request.method == "POST":
+        email = request.data.get("email")
+        otp = request.data.get("otp")
+
+        # Ensure both email and OTP are provided
+        if not email or not otp:
+            return JsonResponse({"error": "Email and OTP are required!"}, status=400)
+
+        # Check if OTP exists and is valid
+        otp_instance = OTP.objects.filter(email=email, otp=otp, is_used=False).first()
+
+        if otp_instance and otp_instance.is_valid():
+            # Mark OTP as used
+            otp_instance.is_used = True
+            otp_instance.save()
+
+            # Check if the user exists for the email
+            user = User.objects.filter(email=email).first()
+
+            if user:
+                # Directly log the user in
+                login(request, user)
+
+                # Get CSRF token and session ID
+                csrf_token = get_token(request)
+                session_id = request.session.session_key
+
+                # Send response with user data, CSRF token, and session ID
+                user_data = {
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email,
+                    "is_staff": user.is_staff,
+                    "is_active": user.is_active,
+                }
+                response = {
+                    "message": "Login successful!",
+                    "user": user_data,
+                    "csrf_token": csrf_token,
+                    "session_id": session_id,
+                }
+                return JsonResponse(response, status=200)
+            else:
+                return JsonResponse(
+                    {"error": "No user associated with this email!"}, status=404
+                )
+        else:
+            return JsonResponse({"error": "Invalid or expired OTP!"}, status=400)
+
+    # Return error for invalid HTTP methods
+    return JsonResponse({"error": "Invalid request method!"}, status=405)

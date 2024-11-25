@@ -1,6 +1,6 @@
 # groceryapp/admin.py
 from django.contrib import admin
-from .models import Product, Cart, Order,  CartProduct, Customer,Admin,Role,Address
+from .models import Product, Cart, Order,  CartProduct, Customer,Admin,Role,Address, OTP
 
 # Register the Product model
 admin.site.register(Product)
@@ -21,3 +21,5 @@ admin.site.register(Admin)
 admin.site.register(Role)
 
 admin.site.register(Address)
+
+admin.site.register(OTP)
