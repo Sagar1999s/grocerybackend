@@ -123,7 +123,7 @@ def get_cart_products(request):
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.contrib.auth.models import User
-from .models import Customer
+from .models import Customer, Role
 from rest_framework import status
 from django.db import transaction
 
@@ -151,6 +151,15 @@ def create_customer(request):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # Ensure the 'customer' role exists
+        try:
+            customer_role = Role.objects.get(name="customer")
+        except Role.DoesNotExist:
+            return Response(
+                {"error": "Customer role does not exist. Please create it first."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         # Use a transaction to ensure atomicity
         with transaction.atomic():
             # Create the User object
@@ -164,6 +173,7 @@ def create_customer(request):
                 phone=phone,
                 password=password,
                 user=user,
+                role=customer_role,  # Assign the customer role
             )
             customer.save()
 
@@ -176,6 +186,7 @@ def create_customer(request):
                     "name": customer.name,
                     "email": customer.email,
                     "phone": customer.phone,
+                    "role": customer.role.name,
                 },
             },
             status=status.HTTP_201_CREATED,
@@ -426,6 +437,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import Product
 import json
+
 
 @api_view(["PUT"])
 def edit_product(request, product_id):
